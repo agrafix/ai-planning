@@ -21,6 +21,13 @@ instance PrettyText Literal where
           LBool False -> "⊥"
           LAtom x -> prettyT x
 
+instance PrettyLatex Literal where
+    prettyL l =
+        case l of
+          LBool True -> "\\top"
+          LBool False -> "\\bot"
+          LAtom x -> prettyL x
+
 data Expr
     = ELit !Literal
     | EAnd !Expr !Expr
@@ -28,6 +35,16 @@ data Expr
     | EEff !Expr !Expr
     | ENot !Expr
     deriving (Show, Eq)
+
+instance PrettyLatex Expr where
+    prettyL e =
+        case e of
+          ELit l -> prettyL l
+          EAnd a b -> "(" <> prettyL a <> " \\land " <> prettyL b <> ")"
+          EOr a b -> "(" <> prettyL a <> " \\lor " <> prettyL b <> ")"
+          EEff a b -> "(" <> prettyL a <> " \\triangleright " <> prettyL b <> ")"
+          ENot a -> "¬" <> prettyL a
+
 
 instance PrettyText Expr where
     prettyT e =
@@ -148,18 +165,6 @@ simplify' e =
 
 regress :: Operator -> Expr -> Expr
 regress (precond, eff) expr =
-{-
-    trace ("Atoms: " ++ show atoms ++ "\n"
-           ++ "Parts are: "
-           ++ show (contradiction precond) ++ ": "
-              ++ prettyS precond ++ " <=> " ++ prettyS (simplify precond) ++ "\n"
-           ++ show (contradiction exprR) ++ ": "
-              ++ prettyS exprR ++ " <=> " ++ prettyS (simplify exprR) ++ "\n"
-           ++ show (contradiction k) ++ ": " ++ prettyS k ++ " <=> " ++ prettyS (simplify k) ++ "\n"
-           ++ "Thus: " ++ prettyS (precond .&& exprR .&& k) ++ " <=> "
-              ++ (prettyS $ simplify $ precond .&& exprR .&& k) ++ "\n"
-          ) $
--}
     simplify $ precond .&& exprR .&& k
     where
       atoms = S.toList $ exprAtoms expr
@@ -219,30 +224,32 @@ runAlgorithm' goal ops isStart =
       step !ctr ix c =
           do let isTrue = isStart c
                  varName =
-                     "y_" ++ show ctr ++
-                     case ix of
+                     "y_{" ++ show ctr ++
+                     (case ix of
                         Just v -> show v
-                        Nothing -> ""
-             putStrLn (varName <> " = " <> prettyS c)
+                        Nothing -> "") ++ "}"
+             putStrLn (varName <> " = & " <> prettySL c <> " \\\\")
              if isTrue || ctr > 200
                  then do when isTrue $
-                             putStrLn $ "Done after " ++ show (ctr + 1) ++ " steps: " <> prettyS c
+                             putStrLn $ "Done after " ++ show (ctr + 1) ++ " steps: " <> prettySL c
                          return isTrue
                  else do let nextOps = zip ops [1..]
                              try [] = pure False
                              try (((desc, pre, pos), nix) : more) =
                                  do let res = regress (pre, pos) c
-                                    putStr $ "Apply " <> desc <> ", result: " <> prettyS res
+                                    putStr $
+                                        "reg_\\text{" <> desc <> "}(" <> varName <> ") = & "
+                                        <> prettySL res
                                     case res of
                                         ELit (LBool False) ->
-                                            do putStrLn " (bad)"
+                                            do putStrLn " & \\text{(bad)} \\\\"
                                                try more
                                         _
                                             | res == c ->
-                                              do putStrLn " (duplicate)"
+                                              do putStrLn " & \\text{(duplicate)} \\\\"
                                                  try more
                                             | otherwise ->
-                                              do putStrLn ""
+                                              do putStrLn " \\\\"
                                                  r <- step (ctr+1) (Just nix) res
                                                  if r then pure True else try more
                          try nextOps
