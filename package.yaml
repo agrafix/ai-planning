@@ -1,0 +1,21 @@
+name:                ai-planning
+version:             0.1.0.0
+synopsis:            Small library to help with my ai-planning exercises
+description:         Please see README.md
+homepage:            https://github.com/agrafix/ai-planning#readme
+license:             BSD3
+author:              Alexander Thiemann
+maintainer:          mail@athiemann.net
+copyright:           2016 Alexander Thiemann <mail@athiemann.net>
+category:            Math, AI
+
+dependencies:
+  - base >= 4.7 && < 5
+  - text
+  - containers
+
+library:
+    source-dirs:      src
+    exposed-modules:
+      - Ai.Planning.Types
+      - Ai.Planning.StripsReg
