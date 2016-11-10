@@ -1,12 +1,13 @@
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Ai.Planning.GeneralReg where
 
 import Ai.Planning.Types
 
+import Control.Monad
 import Data.List (foldl')
-import qualified Data.Set as S
-import Debug.Trace
 import Data.Monoid
+import qualified Data.Set as S
 
 data Literal
     = LBool !Bool
@@ -147,6 +148,7 @@ simplify' e =
 
 regress :: Operator -> Expr -> Expr
 regress (precond, eff) expr =
+{-
     trace ("Atoms: " ++ show atoms ++ "\n"
            ++ "Parts are: "
            ++ show (contradiction precond) ++ ": "
@@ -157,6 +159,7 @@ regress (precond, eff) expr =
            ++ "Thus: " ++ prettyS (precond .&& exprR .&& k) ++ " <=> "
               ++ (prettyS $ simplify $ precond .&& exprR .&& k) ++ "\n"
           ) $
+-}
     simplify $ precond .&& exprR .&& k
     where
       atoms = S.toList $ exprAtoms expr
@@ -172,3 +175,74 @@ regress (precond, eff) expr =
           EAnd accum $
           ENot $
           epc (ELit $ LAtom atom) eff .&& epc (ENot $ ELit $ LAtom atom) eff
+
+exRHome :: Expr
+exRHome = ELit $ LAtom $ Atom "romeo-at-home"
+exJHome :: Expr
+exJHome = ELit $ LAtom $ Atom "juliet-at-home"
+exRWork :: Expr
+exRWork = ELit $ LAtom $ Atom "romeo-at-work"
+exRDance :: Expr
+exRDance = ELit $ LAtom $ Atom "romeo-dancing"
+exJDance :: Expr
+exJDance = ELit $ LAtom $ Atom "juliet-dancing"
+
+exOps :: [(String, Expr, Expr)]
+exOps =
+    [ ( "go-dancing"
+      , exJHome
+      , exJDance .&& (ENot exJHome) .&& (exRHome .> (exRDance .&& (ENot exRHome)))
+      )
+    , ( "go-work"
+      , exRHome
+      , exRWork .&& (ENot exRHome)
+      )
+    , ( "go-home"
+      , exRWork
+      , exRHome .&& (ENot exRWork)
+      )
+    ]
+
+exStart :: Expr -> Bool
+exStart x =
+    x == (exRHome .&& exJHome)
+    || x == (exRHome .|| exJHome)
+
+exGoal :: Expr
+exGoal = exJDance .&& exRHome
+
+runAlgorithm' :: Expr -> [(String, Expr, Expr)] -> (Expr -> Bool) -> IO Bool
+runAlgorithm' goal ops isStart =
+    step 0 Nothing goal
+    where
+      step :: Int -> Maybe Int -> Expr -> IO Bool
+      step !ctr ix c =
+          do let isTrue = isStart c
+                 varName =
+                     "y_" ++ show ctr ++
+                     case ix of
+                        Just v -> show v
+                        Nothing -> ""
+             putStrLn (varName <> " = " <> prettyS c)
+             if isTrue || ctr > 200
+                 then do when isTrue $
+                             putStrLn $ "Done after " ++ show (ctr + 1) ++ " steps: " <> prettyS c
+                         return isTrue
+                 else do let nextOps = zip ops [1..]
+                             try [] = pure False
+                             try (((desc, pre, pos), nix) : more) =
+                                 do let res = regress (pre, pos) c
+                                    putStr $ "Apply " <> desc <> ", result: " <> prettyS res
+                                    case res of
+                                        ELit (LBool False) ->
+                                            do putStrLn " (bad)"
+                                               try more
+                                        _
+                                            | res == c ->
+                                              do putStrLn " (duplicate)"
+                                                 try more
+                                            | otherwise ->
+                                              do putStrLn ""
+                                                 r <- step (ctr+1) (Just nix) res
+                                                 if r then pure True else try more
+                         try nextOps
