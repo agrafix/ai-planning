@@ -15,7 +15,18 @@ dependencies:
   - containers
 
 library:
-    source-dirs:      src
+    source-dirs: src
     exposed-modules:
       - Ai.Planning.Types
       - Ai.Planning.StripsReg
+      - Ai.Planning.GeneralReg
+
+tests:
+  spec:
+    cpp-options: -DTEST
+    main: Test.hs
+    source-dirs:
+      - test
+    dependencies:
+      - HTF
+      - ai-planning
