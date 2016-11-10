@@ -1,6 +1,6 @@
 name:                ai-planning
 version:             0.1.0.0
-synopsis:            Small library to help with my ai-planning exercises
+synopsis:            Basic AI planning algorithms
 description:         Please see README.md
 homepage:            https://github.com/agrafix/ai-planning#readme
 license:             BSD3
