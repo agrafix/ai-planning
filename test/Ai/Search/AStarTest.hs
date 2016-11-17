@@ -2,9 +2,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Ai.Search.AStarTest where
 
+import Ai.Search.AStar
+import Ai.Search.Score
+
 import Test.Framework
 
-import Ai.Search.AStar
 import Data.Maybe
 import Data.Monoid
 import qualified Data.Map as M

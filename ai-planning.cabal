@@ -31,6 +31,7 @@ library
       Ai.Planning.StripsReg
       Ai.Planning.GeneralReg
       Ai.Search.AStar
+      Ai.Search.Score
   other-modules:
       Main
       Paths_ai_planning
