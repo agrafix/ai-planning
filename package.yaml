@@ -13,6 +13,9 @@ dependencies:
   - base >= 4.7 && < 5
   - text
   - containers
+  - psqueues
+  - transformers
+  - mtl
 
 library:
     source-dirs: src
@@ -20,6 +23,7 @@ library:
       - Ai.Planning.Types
       - Ai.Planning.StripsReg
       - Ai.Planning.GeneralReg
+      - Ai.Search.AStar
 
 tests:
   spec:

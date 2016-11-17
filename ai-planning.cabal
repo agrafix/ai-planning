@@ -23,10 +23,14 @@ library
       base >= 4.7 && < 5
     , text
     , containers
+    , psqueues
+    , transformers
+    , mtl
   exposed-modules:
       Ai.Planning.Types
       Ai.Planning.StripsReg
       Ai.Planning.GeneralReg
+      Ai.Search.AStar
   other-modules:
       Main
       Paths_ai_planning
@@ -42,8 +46,12 @@ test-suite spec
       base >= 4.7 && < 5
     , text
     , containers
+    , psqueues
+    , transformers
+    , mtl
     , HTF
     , ai-planning
   other-modules:
       Ai.Planning.GeneralRegTest
+      Ai.Search.AStarTest
   default-language: Haskell2010
