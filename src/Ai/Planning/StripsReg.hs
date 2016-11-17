@@ -34,8 +34,8 @@ conjToList x = S.toList <$> conjToSet x
 
 instance Monoid Conj where
     mempty = CTrue
-    x `mappend` y =
-        case (x, y) of
+    q `mappend` p =
+        case (q, p) of
             (_, CFalse) -> CFalse
             (CFalse, _) -> CFalse
             (CTrue, x) -> x
@@ -101,12 +101,12 @@ evaluate env conjs =
       loop [] = True
 
 possibleOperations :: Conj -> [Operation] -> [Operation]
-possibleOperations conj op =
+possibleOperations conj ops =
     case conj of
       CFalse -> []
       CTrue -> []
       Conj x ->
-          filter (\op -> not . any (makesFalse op) . getAtoms . S.toList $ x) op
+          filter (\op -> not . any (makesFalse op) . getAtoms . S.toList $ x) ops
 
 applyOperation :: Conj -> Operation -> Conj
 applyOperation conj op =
@@ -149,6 +149,7 @@ runAlgorithm :: Conj -> [Operation] -> M.Map Atom Bool -> IO ()
 runAlgorithm conj ops env =
     step 0 Nothing conj
     where
+      step :: Int -> Maybe Int -> Conj -> IO ()
       step !ctr ix c =
           do let isTrue = evaluate env c
                  varName =
