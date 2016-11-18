@@ -24,6 +24,7 @@ library:
       - Ai.Planning.StripsReg
       - Ai.Planning.GeneralReg
       - Ai.Search.AStar
+      - Ai.Search.EnforcedHillClimb
       - Ai.Search.Score
 
 tests:
